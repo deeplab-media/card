@@ -201,7 +201,7 @@ window.DL=(function(){
   gate.addEventListener('click',onTap); gate.addEventListener('touchend',function(e){e.preventDefault();onTap(e);},{passive:false});
 
   /* any later touch (fallback mode or a blocked play) starts the music where it should be */
-  function unlock(){ if(vWant&&v&&v.paused&&vPrimed){ var q=v.play(); if(q&&q.catch) q.catch(function(){}); }
+  function unlock(){ if(!vOff&&vWant&&v&&v.paused&&vPrimed){ var q=v.play(); if(q&&q.catch) q.catch(function(){}); }
     if(!begun||audioOn||!wanted) return; var at=t0===null?0:(performance.now()-t0)/1000; play(at<bgm.duration-1?at:0); }
   ['pointerdown','touchend','click','keydown'].forEach(function(ev){window.addEventListener(ev,unlock,{passive:true,capture:true})});
   snd.addEventListener('click',function(e){ e.stopPropagation(); if(!bgm.paused){wanted=false;bgm.pause();} else {wanted=true;play();} setUI(); });
@@ -211,15 +211,22 @@ window.DL=(function(){
   var v=document.querySelector('.hero video'),vPrimed=false,vWant=false;
   function slowNet(){ var c=navigator.connection||{}; return !!(c.saveData||/(^|-)2g|3g/.test(c.effectiveType||'')); }
   /* start downloading early; if we're inside a tap, "bless" the element so in-app browsers allow play later */
+  /* in-app browsers (Zalo, Facebook, Messenger, Instagram, Line, TikTok) may force native fullscreen → no video there */
+  var inApp=/Zalo|FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|musical_ly|BytedanceWebview|TikTok/i.test(navigator.userAgent);
+  var vOff=inApp;
+  function killVideo(){ vOff=true; vWant=false; if(!v) return; try{ if(v.webkitDisplayingFullscreen&&v.webkitExitFullscreen) v.webkitExitFullscreen(); }catch(e){}
+    try{ if(document.fullscreenElement===v&&document.exitFullscreen) document.exitFullscreen(); }catch(e){}
+    try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){} v.classList.remove('on'); v.style.display='none'; }
+  if(v){ v.addEventListener('webkitbeginfullscreen',killVideo); v.addEventListener('fullscreenchange',function(){ if(document.fullscreenElement===v) killVideo(); }); }
   function primeVideo(inGesture){
-    if(vPrimed||!v||slowNet()) return; vPrimed=true;
+    if(vOff||vPrimed||!v||slowNet()) return; vPrimed=true;
     v.muted=true; v.defaultMuted=true; v.setAttribute('muted',''); v.playsInline=true; v.preload='auto';
     v.addEventListener('playing',function(){v.classList.add('on')});
     v.src=v.dataset.src; try{v.load()}catch(e){}
     if(inGesture){ var p=v.play(); if(p&&p.then) p.then(function(){ if(!vWant) v.pause(); },function(){}); }
   }
   function playVideo(){
-    vWant=true; if(!vPrimed) primeVideo(false); if(!vPrimed) return;
+    if(vOff) return; vWant=true; if(!vPrimed) primeVideo(false); if(!vPrimed) return;
     if(!v.paused) return; var p=v.play(); if(p&&p.catch) p.catch(function(){});
   }
   function fallback(why){
