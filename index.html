@@ -232,6 +232,14 @@ window.DL=(function(){
     onReady:function(fn,now){ readyFn=fn; gate.classList.remove('loading'); gate.classList.add('ready'); if(now){begun=true;hideGate();fn();return;} maybeBegin(); },
     progress:function(p){ if(ring) ring.style.strokeDashoffset=String(301.6*(1-Math.max(0,Math.min(1,p)))); },
     musicTime:function(){ return (audioOn&&!bgm.paused)?bgm.currentTime:null; },
+    /* call back once sound is really coming out (or after a short grace period) with the music position */
+    whenAudible:function(cb){
+      var done=false; function go(){ if(done) return; done=true; cb(audioOn&&!bgm.paused?bgm.currentTime:0); }
+      if(!wanted||!begun){ go(); return; }
+      if(!bgm.paused&&bgm.currentTime>0){ go(); return; }
+      bgm.addEventListener('playing',function(){ setTimeout(go,30); },{once:true});
+      setTimeout(go,450);
+    },
     reveal:function(k){[].forEach.call(document.querySelectorAll('.fade'),function(e){e.style.opacity=k})},
     curtain:function(k){var c=document.getElementById('curtain');c.style.opacity=k;c.style.display=k<=0?'none':'block'},
     settle:function(){fadeTo(0.55,1500);loadVideo()},
