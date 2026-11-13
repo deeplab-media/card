@@ -120,8 +120,8 @@ img{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;display
 
   <div class="deck" id="deck" role="button" tabindex="0" aria-label="Danh thiếp Deeplab">
     <div class="fb">
-      <div class="card bot"><img src="assets/card_trinh.webp" alt="Danh thiếp Trần Thị Lâm Trinh"></div>
-      <div class="card top"><img src="assets/card_sinh.webp" alt="Danh thiếp Dương Lâm Nhất Sinh"></div>
+      <div class="card bot"><img src="assets/card_trinh.webp" crossorigin="anonymous" alt="Danh thiếp Trần Thị Lâm Trinh"></div>
+      <div class="card top"><img src="assets/card_sinh.webp" crossorigin="anonymous" alt="Danh thiếp Dương Lâm Nhất Sinh"></div>
     </div>
   </div>
 
@@ -173,10 +173,14 @@ window.DL=(function(){
     if(t0===null){ t0=performance.now(); tryPlay(0); snd.classList.add('show'); }
   }
   var shown=0,lastV=performance.now();
+  /* watchdog: generous while the 3D bundle is still downloading/booting,
+     strict once it says it is ready but no frame has been painted */
+  var readyShown=0;
   function watch(){
-    var n=performance.now(); if(!document.hidden) shown+=n-lastV; lastV=n;
+    var n=performance.now(),dv=document.hidden?0:n-lastV; lastV=n; shown+=dv;
     if(window.__glOK||dl.failed) return;
-    if(shown>4000){ fallback('timeout'); return; }
+    if(document.documentElement.getAttribute('data-gl')==='ready') readyShown+=dv;
+    if(shown>12000||readyShown>3000){ fallback('timeout'); return; }
     setTimeout(watch,250);
   }
   setTimeout(watch,250);
@@ -191,6 +195,6 @@ window.DL=(function(){
 })();
 </script>
 
-<script src="assets/gl.js" defer></script>
+<script src="assets/gl.js" defer onerror="window.DL&&DL.fallback('load')"></script>
 </body>
 </html>
