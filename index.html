@@ -17,7 +17,7 @@
 <meta property="og:description" content="Video, TikTok & 3D cho doanh nghiệp. Nhắn Zalo trực tiếp cho Sinh hoặc Trinh.">
 <link rel="icon" type="image/png" href="apple-touch-icon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" as="image" crossorigin="anonymous" href="assets/card_back.webp">
-<link rel="preload" as="script" href="assets/gl.js?v=3708150a48">
+<link rel="preload" as="script" href="assets/gl.js?v=bd15dd9dc8">
 <link rel="preload" as="image" crossorigin="anonymous" href="assets/card_sinh.webp">
 <link rel="preload" as="image" crossorigin="anonymous" href="assets/card_trinh.webp">
 <link rel="preconnect" href="https://media.deeplabassist.vn">
@@ -105,11 +105,11 @@ img{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;display
   -webkit-tap-highlight-color:transparent;transition:opacity .45s ease}
 .gate.show{display:flex}.gate.hide{opacity:0;pointer-events:none}
 .g-orb{position:relative;width:104px;height:104px;display:grid;place-items:center}
-.g-orb img{width:44px;height:44px;position:relative;filter:drop-shadow(0 0 14px rgba(120,190,255,.7));animation:gbreath 2.4s ease-in-out infinite}
-.g-orb::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(closest-side,rgba(110,180,255,.28),transparent);animation:gbreath 2.4s ease-in-out infinite}
+.g-orb img{width:44px;height:44px;position:relative;filter:drop-shadow(0 0 14px rgba(255,255,255,.45));animation:gbreath 2.4s ease-in-out infinite}
+.g-orb::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(closest-side,rgba(220,225,235,.18),transparent);animation:gbreath 2.4s ease-in-out infinite}
 .g-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .g-track{fill:none;stroke:rgba(255,255,255,.12);stroke-width:1.5}
-.g-prog{fill:none;stroke:#9fd2ff;stroke-width:2;stroke-linecap:round;stroke-dasharray:301.6;stroke-dashoffset:301.6;transition:stroke-dashoffset .35s ease;filter:drop-shadow(0 0 4px #6cb8ff)}
+.g-prog{fill:none;stroke:#e9ecf2;stroke-width:2;stroke-linecap:round;stroke-dasharray:301.6;stroke-dashoffset:301.6;transition:stroke-dashoffset .35s ease;filter:drop-shadow(0 0 4px rgba(255,255,255,.6))}
 .gate.ready .g-ring{animation:gpulse 1.8s ease-out infinite}
 .g-txt{font-size:10px;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:rgba(255,255,255,.62);padding-left:.42em;opacity:0;transition:opacity .6s .3s}
 .gate.show .g-txt{opacity:1}.gate.loading .g-txt{opacity:.25}
@@ -266,6 +266,6 @@ window.DL=(function(){
 })();
 </script>
 
-<script src="assets/gl.js?v=3708150a48" defer onerror="window.DL&&DL.fallback('load')"></script>
+<script src="assets/gl.js?v=bd15dd9dc8" defer onerror="window.DL&&DL.fallback('load')"></script>
 </body>
 </html>
