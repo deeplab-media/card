@@ -17,7 +17,7 @@
 <meta property="og:description" content="Video, TikTok & 3D cho doanh nghiệp. Nhắn Zalo trực tiếp cho Sinh hoặc Trinh.">
 <link rel="icon" type="image/png" href="apple-touch-icon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" as="image" crossorigin="anonymous" href="assets/card_back.webp">
-<link rel="preload" as="script" href="assets/gl.js?v=d1cb0d3abe">
+<link rel="preload" as="script" href="assets/gl.js?v=3708150a48">
 <link rel="preload" as="image" crossorigin="anonymous" href="assets/card_sinh.webp">
 <link rel="preload" as="image" crossorigin="anonymous" href="assets/card_trinh.webp">
 <link rel="preconnect" href="https://media.deeplabassist.vn">
@@ -48,6 +48,9 @@ img{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;display
 .hero{position:relative;display:block;border-radius:22px;overflow:hidden;flex:1 1 30%;min-height:150px;isolation:isolate}
 .hero video,.hero img.p{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
 .hero video{opacity:0;transition:opacity .8s}.hero video.on{opacity:1}
+.hero img.p{animation:kb 18s ease-in-out infinite alternate;transform-origin:60% 40%}
+@keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.14) translate(-2%,1%)}}
+@media (prefers-reduced-motion:reduce){.hero img.p{animation:none}}
 .hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.85) 100%)}
 .hero .row{position:absolute;left:0;right:0;bottom:0;padding:16px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .hero h1{font-family:var(--disp);font-weight:400;font-size:34px;line-height:1.02;text-transform:uppercase}
@@ -138,7 +141,7 @@ img{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;display
 
   <a class="hero fade" href="https://media.deeplabassist.vn">
     <img class="p" src="https://media.deeplabassist.vn/assets/img/hero-dior.webp" alt="" decoding="async" onerror="this.onerror=null;this.src='site.jpg'">
-    <video data-src="https://media.deeplabassist.vn/assets/video/hero-dior.mp4" muted loop playsinline preload="none" disablepictureinpicture aria-hidden="true"></video>
+    <video data-src="https://media.deeplabassist.vn/assets/video/hero-dior.mp4" muted loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="none" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
     <div class="row"><h1>Production<br>House</h1><span class="wbtn">Xem website</span></div>
   </a>
 
@@ -182,7 +185,7 @@ window.DL=(function(){
   })();
 
   function begin(){
-    if(begun) return; begun=true; hideGate(); t0=performance.now();
+    if(begun) return; begun=true; hideGate(); t0=performance.now(); primeVideo(tapped);
     play(0); setTimeout(function(){snd.classList.add('show')},400);
     if(readyFn) readyFn();
   }
@@ -192,29 +195,38 @@ window.DL=(function(){
     if(readyFn){ begin(); return; }                 // ready → music + intro start together, inside the gesture
     var p=null; try{ p=bgm.play(); }catch(err){}    // not ready yet → unlock audio now, start later
     if(p&&p.then) p.then(function(){ if(!begun){bgm.pause();try{bgm.currentTime=0}catch(err){}} },function(){});
+    primeVideo(true);
     gate.classList.add('loading');
   }
   gate.addEventListener('click',onTap); gate.addEventListener('touchend',function(e){e.preventDefault();onTap(e);},{passive:false});
 
   /* any later touch (fallback mode or a blocked play) starts the music where it should be */
-  function unlock(){ if(!begun||audioOn||!wanted) return; var at=t0===null?0:(performance.now()-t0)/1000; play(at<bgm.duration-1?at:0); }
+  function unlock(){ if(vWant&&v&&v.paused&&vPrimed){ var q=v.play(); if(q&&q.catch) q.catch(function(){}); }
+    if(!begun||audioOn||!wanted) return; var at=t0===null?0:(performance.now()-t0)/1000; play(at<bgm.duration-1?at:0); }
   ['pointerdown','touchend','click','keydown'].forEach(function(ev){window.addEventListener(ev,unlock,{passive:true,capture:true})});
   snd.addEventListener('click',function(e){ e.stopPropagation(); if(!bgm.paused){wanted=false;bgm.pause();} else {wanted=true;play();} setUI(); });
   document.addEventListener('visibilitychange',function(){ if(document.hidden){bgm.pause()} else if(wanted&&audioOn){bgm.play().catch(function(){})} });
 
   function fadeTo(v,ms){var a=bgm.volume,s=performance.now();(function f(n){var k=Math.min(1,(n-s)/ms);bgm.volume=a+(v-a)*k;if(k<1)requestAnimationFrame(f)})(s)}
-  var v=document.querySelector('.hero video'),vl=false;
-  function loadVideo(){
-    if(vl||!v) return; vl=true;
-    var c=navigator.connection||{}; if(c.saveData||/(^|-)2g|3g/.test(c.effectiveType||'')) return;
-    v.src=v.dataset.src;v.addEventListener('playing',function(){v.classList.add('on')},{once:true});
-    var p=v.play();if(p&&p.catch)p.catch(function(){});
+  var v=document.querySelector('.hero video'),vPrimed=false,vWant=false;
+  function slowNet(){ var c=navigator.connection||{}; return !!(c.saveData||/(^|-)2g|3g/.test(c.effectiveType||'')); }
+  /* start downloading early; if we're inside a tap, "bless" the element so in-app browsers allow play later */
+  function primeVideo(inGesture){
+    if(vPrimed||!v||slowNet()) return; vPrimed=true;
+    v.muted=true; v.defaultMuted=true; v.setAttribute('muted',''); v.playsInline=true; v.preload='auto';
+    v.addEventListener('playing',function(){v.classList.add('on')});
+    v.src=v.dataset.src; try{v.load()}catch(e){}
+    if(inGesture){ var p=v.play(); if(p&&p.then) p.then(function(){ if(!vWant) v.pause(); },function(){}); }
+  }
+  function playVideo(){
+    vWant=true; if(!vPrimed) primeVideo(false); if(!vPrimed) return;
+    if(!v.paused) return; var p=v.play(); if(p&&p.catch) p.catch(function(){});
   }
   function fallback(why){
     if(dl.failed) return; dl.failed=why||true;
     document.documentElement.classList.remove('gl');
     var c=document.getElementById('gl'); if(c) c.style.display='none';
-    hideGate(); dl.curtain(0); dl.reveal(1); dl.settle();
+    hideGate(); primeVideo(false); dl.curtain(0); dl.reveal(1); dl.settle();
     if(!begun){ begun=true; t0=performance.now(); if(canAuto!==false||tapped) play(0); }
     snd.classList.add('show');
   }
@@ -240,14 +252,14 @@ window.DL=(function(){
       bgm.addEventListener('playing',function(){ setTimeout(go,30); },{once:true});
       setTimeout(go,450);
     },
-    reveal:function(k){[].forEach.call(document.querySelectorAll('.fade'),function(e){e.style.opacity=k})},
+    reveal:function(k){ if(k>0.01&&!vWant) playVideo(); [].forEach.call(document.querySelectorAll('.fade'),function(e){e.style.opacity=k})},
     curtain:function(k){var c=document.getElementById('curtain');c.style.opacity=k;c.style.display=k<=0?'none':'block'},
-    settle:function(){fadeTo(0.55,1500);loadVideo()},
+    settle:function(){fadeTo(0.55,1500);playVideo()},
     still:window.matchMedia('(prefers-reduced-motion: reduce)').matches
   };
 })();
 </script>
 
-<script src="assets/gl.js?v=d1cb0d3abe" defer onerror="window.DL&&DL.fallback('load')"></script>
+<script src="assets/gl.js?v=3708150a48" defer onerror="window.DL&&DL.fallback('load')"></script>
 </body>
 </html>
