@@ -207,7 +207,17 @@ window.DL=(function(){
   document.addEventListener('visibilitychange',function(){ if(document.hidden){bgm.pause()} else if(wanted&&audioOn){bgm.play().catch(function(){})} });
 
   function fadeTo(v,ms){var a=bgm.volume,s=performance.now();(function f(n){var k=Math.min(1,(n-s)/ms);bgm.volume=a+(v-a)*k;if(k<1)requestAnimationFrame(f)})(s)}
-  var v=document.querySelector('.hero video'),vPrimed=false,vWant=false;
+  var v=(function(){
+    // in-app browsers (Zalo, Facebook, Messenger, Instagram, Line, TikTok) force native fullscreen → never create a video there
+    if(/Zalo|FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|musical_ly|BytedanceWebview|TikTok/i.test(navigator.userAgent)) return null;
+    var h=document.querySelector('.hero'); if(!h) return null;
+    var e=document.createElement('video');
+    e.setAttribute('data-src','https://media.deeplabassist.vn/assets/video/hero-dior.mp4');
+    ['muted','loop','playsinline','webkit-playsinline','disablepictureinpicture','disableremoteplayback'].forEach(function(a){e.setAttribute(a,'')});
+    e.setAttribute('preload','none'); e.setAttribute('aria-hidden','true'); e.muted=true;
+    var img=h.querySelector('img.p'); h.insertBefore(e, img?img.nextSibling:h.firstChild);
+    return e;
+  })(),vPrimed=false,vWant=false;
   function slowNet(){ var c=navigator.connection||{}; return !!(c.saveData||/(^|-)2g|3g/.test(c.effectiveType||'')); }
   /* start downloading early; if we're inside a tap, "bless" the element so in-app browsers allow play later */
   /* in-app browsers (Zalo, Facebook, Messenger, Instagram, Line, TikTok) may force native fullscreen → no video there */
